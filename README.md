@@ -1,5 +1,5 @@
 # Discord Drinking Games Bot
-A drinking games bot for Discord
+A drinking games bot for Discord written with node, discord.js and redis
 
 Add the live bot [here](https://discord.com/api/oauth2/authorize?client_id=705739513955352606&permissions=51264&scope=bot)
 
