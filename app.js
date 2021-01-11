@@ -5,6 +5,7 @@ const mlt = require('./games/mostLikelyTo/mostLikelyTo');
 const adminCommands = require('./adminCommands');
 const analytics = require('./analytics');
 const db = require('./db');
+const { getPrefix, setPrefix } = require('./prefix')
 
 const client = new Discord.Client();
 
@@ -13,62 +14,63 @@ client.on('ready', async () => {
 });
 
 client.on('message', async (msg) => {
+  const prefix = await getPrefix(msg.guild.id);
   msg.content = msg.content.toLowerCase();
 
-  if (msg.content.includes('!start')) {
+  if (msg.content.includes(`${prefix}start`)) {
     const game = await db.getGame(msg.channel.id);
     msg.content = msg.content.split(' ');
 
     checkPermissions(msg);
 
-    if (game != null) msg.channel.send('There is already an active game in this channel. Type **!stop** to start again.');
+    if (game != null) msg.channel.send(`There is already an active game in this channel. Type **${prefix}stop** to start again.`);
     else if (msg.content[1] == 'rof') {
       analytics.addEvent('start rof', msg);
-      rof.start(msg);
+      rof.start(msg, prefix);
     } else if (msg.content[1] == 'mlt') {
       analytics.addEvent('start mlt', msg);
       mlt.start(msg);
-    } else if (typeof msg.content[1] == 'undefined') msg.channel.send('Please include the game mode you want to start for example: ``!start rof`` to start a game of Ring Of Fire');
+    } else if (typeof msg.content[1] == 'undefined') msg.channel.send(`Please include the game mode you want to start for example: \`\`${prefix}start rof\`\` to start a game of Ring Of Fire`);
   }
 
-  if (msg.content == '!pick') {
+  if (msg.content == `${prefix}pick`) {
     analytics.addEvent('pick', msg);
     checkPermissions(msg);
-    rof.pick(msg);
+    rof.pick(msg, prefix);
   }
 
-  if (msg.content == '!stop') {
+  if (msg.content == `${prefix}stop`) {
     analytics.addEvent('stop', msg);
     checkPermissions(msg);
     rof.stop(msg);
   }
 
-  if (msg.content == '!credits') {
+  if (msg.content == `${prefix}credits`) {
     checkPermissions(msg);
     rof.credits(msg);
   }
 
-  if (msg.content == '!cardcount') {
+  if (msg.content == `${prefix}cardcount`) {
     analytics.addEvent('cardcount', msg);
     checkPermissions(msg);
     rof.cardCount(msg);
   }
 
-  if (msg.content == '!activegames') {
+  if (msg.content == `${prefix}activegames`) {
     checkPermissions(msg);
     auth(msg, client, rof.activeGames);
   }
 
-  if (msg.content == '!listrules') {
+  if (msg.content == `${prefix}listrules`) {
     analytics.addEvent('listrules', msg);
     checkPermissions(msg);
     rof.listRules(msg);
   }
 
-  if (msg.content == '!help') {
+  if (msg.content == `${prefix}help`) {
     analytics.addEvent('help', msg);
     checkPermissions(msg);
-    rof.listCommands(msg);
+    rof.listCommands(msg, prefix);
   }
 
   if (typeof msg.mentions.users.first() != 'undefined') {
@@ -80,7 +82,24 @@ client.on('message', async (msg) => {
     }
   }
 
-  if (msg.content == '!servers') auth(msg, client, adminCommands.listServers);
+  if (msg.content == `${prefix}servers`) auth(msg, client, adminCommands.listServers);
+
+  if (msg.content.includes(`${prefix}setprefix`)) {
+    const content = msg.content.split(' ')
+    const newPrefix = content[1]
+
+    if (newPrefix.length <= 5) {
+      const set = await setPrefix(newPrefix, msg.guild.id)
+        .catch(err => { 
+          msg.channel.send('Error setting prefix')
+          return false
+        })
+      if (set) msg.channel.send(`Prefix has been set to: ${newPrefix}`)
+    }
+    else {
+      msg.channel.send('Prefix must be 5 characters or less')
+    }
+  }
 });
 
 client.on('guildCreate', (guild) => {

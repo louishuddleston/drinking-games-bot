@@ -3,9 +3,8 @@ const { availableCards, getCards, rules } = require('./cards');
 const db = require('../../db');
 const errorHandler = require('../../errorHandler');
 
-const commandList = '**Ring of Fire:**\n``!start rof`` Start a new game.\n``!listrules`` List of rules.\n``!pick`` Pick a card.\n``!stop`` Stop the current game.\n``!cardcount`` Shows the amount of cards left in the current game.\n\n**Who\'s most likely to:**\nTag the person most likely to do what the question says, whoever gets the most votes must drink!\n``!start mlt [amount of questions] [seconds to answer]`` Start a new game.\n``!stop`` Stop the current game.';
 
-exports.start = async (msg) => {
+exports.start = async (msg, prefix) => {
   const id = msg.channel.id;
 
   const cards = getCards(availableCards);
@@ -25,16 +24,16 @@ exports.start = async (msg) => {
   const r = await db.setGame(id, game)
       .catch((err) => errorHandler(err, msg));
 
-  if (r) msg.channel.send('Ring of Fire has started.\nType **!pick** to pick a card or **!help** to get the full list of commands.');
+  if (r) msg.channel.send(`Ring of Fire has started.\nType **${prefix}pick** to pick a card or **${prefix}help** to get the full list of commands.`);
 };
 
-exports.pick = async (msg) => {
+exports.pick = async (msg, prefix) => {
   const id = msg.channel.id;
   const data = await db.getGame(id)
       .catch((err) => errorHandler(err, msg));
 
   if (!data) {
-    msg.channel.send('No active game. Type **!start** to start one.');
+    msg.channel.send(`No active game. Type **${prefix}start** to start one.`);
   } else {
     let rule = rules[data.cards[0].name];
     const attachment = new MessageAttachment(process.env.IMAGE_LOCATION + data.cards[0].fileName);
@@ -46,7 +45,7 @@ exports.pick = async (msg) => {
     data.cards.shift();
 
     if (data.cards.length == 0) {
-      setTimeout(() => msg.channel.send('Game over, hope you are feeling tipsy 😜. Type **!start** to start a new game.'), 1000);
+      setTimeout(() => msg.channel.send(`Game over, hope you are feeling tipsy 😜. Type **${prefix}start** to start a new game.`), 1000);
       await db.del(id);
     } else {
       await db.setGame(id, data)
@@ -109,7 +108,21 @@ exports.listRules = (msg) => {
   msg.channel.send(message);
 };
 
-exports.listCommands = (msg) => {
+exports.listCommands = (msg, prefix) => {
+  const commandList = (`
+  **General**
+  \`\`${prefix}setprefix <prefix>\`\` Change the prefix to <prefix>\n
+  **Ring of Fire:**
+  \`\`${prefix}start rof\`\` Start a new game.
+  \`\`${prefix}listrules\`\` List of rules.
+  \`\`${prefix}pick\`\` Pick a card.
+  \`\`${prefix}stop\`\` Stop the current game.
+  \`\`${prefix}cardcount\`\` Shows the amount of cards left in the current game.\n\n
+  **Who\'s most likely to:**
+  Tag the person most likely to do what the question says, whoever gets the most votes must drink!
+  \`\`${prefix}start mlt [amount of questions] [seconds to answer]\`\` Start a new game.
+  \`\`${prefix}stop\`\` Stop the current game.`);
+
   const embed = new MessageEmbed()
       .setColor('#eb4034')
       .setTitle('Help')
