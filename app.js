@@ -95,7 +95,7 @@ client.on('message', async (msg) => {
           msg.channel.send('Error setting prefix')
           return false
         })
-      if (set) msg.channel.send(`Prefix has been set to: ${newPrefix}`)
+      if (set) msg.channel.send(`Prefix has been set to: ${newPrefix}\nUse \`\`${newPrefix}help\`\` to see commands`)
     }
     else {
       msg.channel.send('Prefix must be 10 characters or less')
