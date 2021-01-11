@@ -14,7 +14,7 @@ client.on('ready', async () => {
 });
 
 client.on('message', async (msg) => {
-  const prefix = await getPrefix(msg.guild.id);
+  const prefix = await getPrefix(msg.guild ? msg.guild.id : msg.channel.id);
   msg.content = msg.content.toLowerCase();
 
   if (msg.content.includes(`${prefix}start`)) {
@@ -87,9 +87,10 @@ client.on('message', async (msg) => {
   if (msg.content.includes(`${prefix}setprefix`)) {
     const content = msg.content.split(' ')
     const newPrefix = content[1]
+    const id = msg.guild ? msg.guild.id : msg.channel.id;
 
     if (newPrefix.length <= 5) {
-      const set = await setPrefix(newPrefix, msg.guild.id)
+      const set = await setPrefix(newPrefix, id)
         .catch(err => { 
           msg.channel.send('Error setting prefix')
           return false
