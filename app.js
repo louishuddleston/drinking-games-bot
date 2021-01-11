@@ -89,7 +89,7 @@ client.on('message', async (msg) => {
     const newPrefix = content[1]
     const id = msg.guild ? msg.guild.id : msg.channel.id;
 
-    if (newPrefix.length <= 5) {
+    if (newPrefix.length <= 10) {
       const set = await setPrefix(newPrefix, id)
         .catch(err => { 
           msg.channel.send('Error setting prefix')
@@ -98,7 +98,7 @@ client.on('message', async (msg) => {
       if (set) msg.channel.send(`Prefix has been set to: ${newPrefix}`)
     }
     else {
-      msg.channel.send('Prefix must be 5 characters or less')
+      msg.channel.send('Prefix must be 10 characters or less')
     }
   }
 });
